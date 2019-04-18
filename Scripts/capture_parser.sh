@@ -5,11 +5,14 @@
 #		parse tshark captures. Then creates a file for each of the
 #		IPs found in the file. Then removes captures with no traffic
 #		associated with them.
-# Params:	$1 = .pcap file to read from
-# 		$2 = date in the form of (April15)
+# Params:	$1 = Date of the caputure
+
+mkdir /root/IOT-packet-capture/Individual_Captures/$1
 
 # Output Directory
-output="./Individual_Captures/$2/"
+output="/root/IOT-packet-capture/Individual_Captures/$1/"
+capture_dir="/root/IOT-packet-capture/Autocapture/$1/$2"
+
 
 
 # Read CSV file Allips and search for conversations in the pcap with each, create individual
@@ -20,17 +23,17 @@ do
 	ip=$(grep -o -e "[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}" <<< $name)
 	writer="$name.pcap"
 	echo "[***] CURRENTLY PARSING: $ip"
-	tshark -r $1 -w "$output$writer" -2 -R "ip.addr==$ip"
+	tshark -r $capture_dir -w "$output$writer" -2 -R "ip.addr==$ip"
 
-done < Allips
+done < ~/IOT-packet-capture/Assets/Allips
 
 
 # Rename the files so that their are no spaces in the filename.
-find . -name "* *" -type f | rename 's/ /_/g'
+find $output -name "* *" -type f | rename 's/ /_/g'
 
 # Remove .pcap files which did not have any traffic (272 bytes is the size
 # of the empty pcap file.
-find . -size 272c -print0 | while IFS= read -r -d $'\0' line
+find $output -size -500c -print0 | while IFS= read -r -d $'\0' line
 do
 	rm $line
 done
